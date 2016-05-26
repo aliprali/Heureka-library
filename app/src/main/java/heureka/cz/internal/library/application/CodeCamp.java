@@ -7,9 +7,7 @@ import com.facebook.stetho.Stetho;
 
 import heureka.cz.internal.library.di.ApplicationComponent;
 import heureka.cz.internal.library.di.ApplicationModule;
-//import heureka.cz.internal.library.di.DaggerApplicationComponent;
 import heureka.cz.internal.library.di.DaggerApplicationComponent;
-import heureka.cz.internal.library.rest.interfaces.ApiInterface;
 
 /**
  * Created by tomas on 13.4.16.
@@ -17,8 +15,6 @@ import heureka.cz.internal.library.rest.interfaces.ApiInterface;
 public class CodeCamp extends Application implements ProvideApplicationComponent {
 
     private ApplicationComponent applicationComponent;
-
-    private ApiInterface apiDescription;
 
     @Override
     public void onCreate() {
@@ -35,11 +31,11 @@ public class CodeCamp extends Application implements ProvideApplicationComponent
         applicationComponent = DaggerApplicationComponent.builder()
                 .applicationModule(new ApplicationModule(this))
                 .build();
-
     }
 
     @Override
     public ApplicationComponent getApplicationComponent() {
         return applicationComponent;
     }
+
 }

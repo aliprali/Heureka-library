@@ -1,12 +1,10 @@
 package heureka.cz.internal.library.ui.dialogs;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
-import android.support.v4.content.res.ResourcesCompat;
 import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
@@ -19,8 +17,6 @@ import android.widget.EditText;
 
 import com.google.zxing.integration.android.IntentIntegrator;
 
-import java.util.ArrayList;
-
 import javax.inject.Inject;
 
 import butterknife.Bind;
@@ -31,12 +27,12 @@ import eu.inmite.android.lib.validations.form.annotations.NotEmpty;
 import eu.inmite.android.lib.validations.form.callback.SimpleErrorPopupCallback;
 import heureka.cz.internal.library.R;
 import heureka.cz.internal.library.application.CodeCamp;
+import heureka.cz.internal.library.helpers.Config;
+import heureka.cz.internal.library.helpers.RetrofitBuilder;
 import heureka.cz.internal.library.repository.Book;
 import heureka.cz.internal.library.rest.ApiDescription;
-import heureka.cz.internal.library.ui.BookDetailActivity;
 import heureka.cz.internal.library.ui.BookDetailAndResActivity;
 import heureka.cz.internal.library.ui.MainActivity;
-import retrofit2.Retrofit;
 
 /**
  * Created by tomas on 26.4.16.
@@ -48,7 +44,7 @@ public class SearchDialog extends DialogFragment {
     private String code = "";
 
     @Inject
-    Retrofit retrofit;
+    RetrofitBuilder retrofitBuilder;
 
     private ApiDescription apiDescription;
 
@@ -70,13 +66,15 @@ public class SearchDialog extends DialogFragment {
             return;
         }
 
-        apiDescription.getBook(searchValue.getText().toString(), new ApiDescription.ResponseHandler() {
+        final String bookCode = searchValue.getText().toString();
+        apiDescription.getBook(bookCode, new ApiDescription.ResponseHandler() {
             @Override
             public void onResponse(Object data) {
                 Intent intent = new Intent(getActivity(), BookDetailAndResActivity.class);
                 Bundle bundle = new Bundle();
                 bundle.putParcelable(MainActivity.KEY_BOOK_DETAIL, (Book)data);
-                bundle.putBoolean(BookDetailActivity.KEY_CAN_BORROW, true);
+                bundle.putBoolean(BookDetailAndResActivity.KEY_CAN_BORROW, true);
+                bundle.putString(BookDetailAndResActivity.KEY_CODE, bookCode);
                 intent.putExtras(bundle);
                 startActivity(intent);
             }
@@ -105,7 +103,7 @@ public class SearchDialog extends DialogFragment {
         ButterKnife.bind(this, view);
         ((CodeCamp)getActivity().getApplication()).getApplicationComponent().inject(this);
 
-        apiDescription = new ApiDescription(retrofit);
+        apiDescription = new ApiDescription(retrofitBuilder.provideRetrofit(Config.API_BASE_URL));
         return view;
     }
 

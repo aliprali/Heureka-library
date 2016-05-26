@@ -5,20 +5,28 @@ package heureka.cz.internal.library.ui.fragments;
  */
 
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.RatingBar;
 import android.widget.TextView;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
 
 import javax.inject.Inject;
 
@@ -28,9 +36,15 @@ import butterknife.OnClick;
 import heureka.cz.internal.library.R;
 import heureka.cz.internal.library.application.CodeCamp;
 import heureka.cz.internal.library.helpers.CollectionUtils;
+import heureka.cz.internal.library.helpers.Config;
+import heureka.cz.internal.library.helpers.RetrofitBuilder;
 import heureka.cz.internal.library.repository.Book;
+import heureka.cz.internal.library.repository.BookReservation;
 import heureka.cz.internal.library.repository.Info;
+import heureka.cz.internal.library.repository.Settings;
 import heureka.cz.internal.library.rest.ApiDescription;
+import heureka.cz.internal.library.services.DownloadService;
+import heureka.cz.internal.library.ui.BookDetailAndResActivity;
 import heureka.cz.internal.library.rest.ApiDescription.ResponseHandler;
 import heureka.cz.internal.library.ui.MainActivity;
 import heureka.cz.internal.library.ui.adapters.AvailableRecyclerAdapter;
@@ -39,14 +53,8 @@ import heureka.cz.internal.library.ui.dialogs.RateDialog;
 import retrofit2.Retrofit;
 
 public class BookDetailFragment extends Fragment {
-String user = "tomas";
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Get the view from fragment_book_detailk_detail.xml
-        View view = inflater.inflate(R.layout.activity_book_detail, container, false);
-        return view;
-    }
+
+    private Map<String, String> mimes = new HashMap<>();
 
     public static final String KEY_CAN_BORROW = "can_borrow";
     public static final String KEY_CAN_RESERVE = "can_reserve";
@@ -54,17 +62,19 @@ String user = "tomas";
 
     private Book bookDetail;
 
-    /**
+    /*
      * vypujcka by měla byt mozna jen po nacteni knihy cteckou,
-     * aby nedoslo k vypojceni jine knihy
-     * */
+     * aby nedoslo k vypojceni jine knihy */
     private boolean canBorrow = false;
 
+    /** zato rezervace kdykoliv jindy */
     private boolean canReturn = false;
     /**
      * zato rezervace kdykoliv jindy
      * */
     private boolean canReserve = false;
+
+    private String bookCode = "";
 
     private ApiDescription apiDescription;
 
@@ -72,14 +82,13 @@ String user = "tomas";
     CollectionUtils collectionUtils;
 
     @Inject
-    Retrofit retrofit;
+    RetrofitBuilder retrofitBuilder;
+
+    @Inject
+    Settings settings;
 
     @Bind(R.id.coordinator)
     View coordinator;
-
-//    @Bind(R.id.toolbar)
-//    Toolbar toolbar;
-
 
     @Bind(R.id.detail_name)
     TextView detailName;
@@ -114,28 +123,87 @@ String user = "tomas";
     @OnClick(R.id.btn_borrow)
     void borrowBook() {
         btnBorrow.setEnabled(false);
-        apiDescription.borrowBook(bookDetail.getBookId(), new ResponseHandler() {
+
+        if (settings.get() == null) {
+            return;
+        }
+
+        apiDescription.checkBorrowBook(bookCode, settings.get().getEmail(), new ResponseHandler() {
             @Override
             public void onResponse(Object data) {
-                Snackbar.make(coordinator, ((Info)data).getInfo(), Snackbar.LENGTH_SHORT).show();
+                ArrayList<BookReservation> reservations = (ArrayList<BookReservation>)data;
+
+                if(reservations.isEmpty()) {
+                    doBorrow();
+                } else {
+                    Log.d("TEST", "show ask dialog...");
+                    new AlertDialog.Builder(getContext())
+                            .setIcon(android.R.drawable.ic_dialog_alert)
+                            .setTitle(R.string.reservation_exist)
+                            .setMessage(R.string.reservation_exist_info)
+                            .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    doBorrow();
+                                }
+                            })
+                            .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    btnBorrow.setEnabled(true);
+                                }
+                            })
+                            .show();
+                }
+
             }
 
             @Override
-            public void onFailure() {
-                btnBorrow.setEnabled(true);
-            }
+            public void onFailure() {}
         });
+
+    }
+
+    @OnClick(R.id.btn_reserve)
+    void reserveBook() {
+        btnReserve.setEnabled(false);
+
+        if (settings.get() == null) {
+            return;
+        }
+
+        if(!"Papír".equals(bookDetail.getForm())) {
+            Bundle bundle = new Bundle();
+            bundle.putString(DownloadService.KEY_ID, ""+bookDetail.getBookId());
+
+            bundle.putString(DownloadService.KEY_NAME, bookDetail.getName()+mimes.get(bookDetail.getMime()));
+            bundle.putString(DownloadService.KEY_TYPE, DownloadService.TYPE_BOOK);
+
+            Intent intent = new Intent(getContext(), DownloadService.class);
+            intent.putExtras(bundle);
+            getActivity().startService(intent);
+        } else {
+            apiDescription.reserveBook(bookDetail.getBookId(), settings.get().getEmail(), new ApiDescription.ResponseHandler() {
+                @Override
+                public void onResponse(Object data) {
+                    Snackbar.make(coordinator, ((Info) data).getInfo(), Snackbar.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onFailure() {
+                    btnBorrow.setEnabled(true);
+                }
+            });
+        }
     }
 
     @OnClick(R.id.btn_return)
     void returnBook() {
-      //  btnReturn.setEnabled(false);
-        //Intent intent = new Intent(activity, BookReturnActivity.class);
-     // Long bookId = bookDetail.getId();
+        btnReturn.setEnabled(false);
 
         Bundle args = new Bundle();
-        args.putInt("bookId", (int)bookDetail.getBookId());
-System.out.println("Passed ID" + bookDetail.getBookId());
+        args.putInt(RateDialog.TAG_BOOK_ID, bookDetail.getBookId());
+
         RateDialog rateDialog= RateDialog.newInstance();
         rateDialog.setArguments(args);
         FragmentManager fm = getChildFragmentManager();
@@ -143,37 +211,7 @@ System.out.println("Passed ID" + bookDetail.getBookId());
         rateDialog.show(fm, "fragment_rate_dialog");
         btnReturn.setEnabled(false);
         getFragmentManager().popBackStackImmediate();
-       // FragmentManager fm = getActivity().getSupportFragmentManager();
-        //Bundle args = new Bundle();
-
-        //settingsDialog.setArguments(args);
-        //ettingsDialog.show(fm, "fragment_rate_dialog");
-
-
-
-
-
-//        BookReturnFragment nextFrag= new BookReturnFragment();
-//        this.getFragmentManager().beginTransaction()
-//                .replace(R.id.container, nextFrag,"TAG")
-//                .addToBackStack(null)
-//                .commit();
-       // intent.putExtra("BOOK_ID", bookId);
-        //startActivity(intent);
-
-//        apiDescription.returnBook(bookDetail.getBookId(), new ApiDescription.ResponseHandler() {
-//            @Override
-//            public void onResponse(Object data) {
-//                Snackbar.make(coordinator, ((Info) data).getInfo(), Snackbar.LENGTH_SHORT).show();
-//            }
-
-//            @Override
-//            public void onFailure() {
-//                btnReturn.setEnabled(true);
-//            }
-//        });
-//
-}
+    }
 
     @OnClick(R.id.detail_link)
     void detailLink() {
@@ -192,6 +230,12 @@ System.out.println("Passed ID" + bookDetail.getBookId());
     }
 
     @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.activity_book_detail, container, false);
+        return view;
+    }
+
+    @Override
     public void onViewCreated(final View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
@@ -205,6 +249,7 @@ System.out.println("Passed ID" + bookDetail.getBookId());
             canReserve = getActivity().getIntent().getExtras().getBoolean(KEY_CAN_RESERVE);
             canReturn = getActivity().getIntent().getExtras().getBoolean(MY_BOOK);
             //toto ismzbook
+            bookCode = getActivity().getIntent().getExtras().getString(BookDetailAndResActivity.KEY_CODE);
         }
 
         // nacteni stavu po otoceni obrazovky
@@ -215,18 +260,10 @@ System.out.println("Passed ID" + bookDetail.getBookId());
             canReturn = savedInstanceState.getBoolean(MY_BOOK);
             //toto ismzbook
 
+            bookCode = savedInstanceState.getString(BookDetailAndResActivity.KEY_CODE);
         }
 
-        apiDescription = new ApiDescription(retrofit);
-
-//        ((ActionBarActivity)getActivity())setSupportActionBar(toolbar);
-//        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-//        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                finish();
-//            }
-//        });
+        apiDescription = new ApiDescription(retrofitBuilder.provideRetrofit(settings.get() != null ? settings.get().getApiAddress() : Config.API_BASE_URL));
 
         if(!canBorrow) {
             btnBorrow.getLayoutParams().height = 0;
@@ -235,6 +272,7 @@ System.out.println("Passed ID" + bookDetail.getBookId());
         if(!canReserve) {
             btnReserve.getLayoutParams().height = 0;
         }
+
         if(!canReturn){
             btnReturn.getLayoutParams().height = 0;
         }
@@ -253,8 +291,14 @@ System.out.println("Passed ID" + bookDetail.getBookId());
     }
 
     private void initBook() {
+
+        mimes.put("application/pdf", "pdf");
+        mimes.put("application/vnd.amazon.ebook", "kindle");
+        mimes.put("application/x-dtbook+xml", "epub");
+        mimes.put("audio/mpeg", "mp3");
+
         detailName.setText(bookDetail.getName());
-        detailTags.setText(bookDetail.getTags().size() > 0 ? collectionUtils.implode(",", bookDetail.getTags()) : bookDetail.getDbTags());
+        detailTags.setText(bookDetail.getTags().size() > 0 ? collectionUtils.implode(",", bookDetail.getTags()) : "");
         detailLang.setText(bookDetail.getLang());
         detailForm.setText(bookDetail.getForm());
         detailLink.setText(bookDetail.getDetailLink());
@@ -266,8 +310,27 @@ System.out.println("Passed ID" + bookDetail.getBookId());
         detailUsers.setLayoutManager(new LinearLayoutManager(getActivity()));
         UsersRecyclerAdapter adapterUsers = new UsersRecyclerAdapter(bookDetail.getHolders());
         detailUsers.setAdapter(adapterUsers);
+
+        if(!"Papír".equals(bookDetail.getForm())) {
+            btnReserve.setText(R.string.download);
+        }
     }
-public Book getBook(){
+
+    private void doBorrow() {
+        apiDescription.borrowBook(bookCode, settings.get().getEmail(), new ApiDescription.ResponseHandler() {
+            @Override
+            public void onResponse(Object data) {
+                Snackbar.make(coordinator, ((Info)data).getInfo(), Snackbar.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure() {
+                btnBorrow.setEnabled(true);
+            }
+        });
+    }
+
+    public Book getBook(){
     return bookDetail;
 }
 

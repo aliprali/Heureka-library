@@ -19,18 +19,46 @@
     <string name="drawer_open">Zobrazit</string>
     <string name="drawer_close">Skrýt</string>
     <string name="search">Vyhledat</string>
+    <string name="set">Nastavit</string>
+    <string name="settings">Nastavení</string>
     <string name="not_empty">Políčko musí být vyplněné</string>
     <string name="detail">Detail:</string>
     <string name="available">Dostupnost:</string>
     <string name="info">Kdo má půjčeno:</string>
     <string name="borrow">Vypůjčit</string>
     <string name="reserve">Rezervovat</string>
+    <string name="email">e-mail</string>
+    <string name="name">Jméno</string>
+    <string name="requestSended">Váš požadavek byl odeslán</string>
+    <string name="notActivated">Váš účet nebyl ještě aktivován</string>
+    <string name="gcm_sender_id">29324601769</string>
+
+    <string name="download">Stáhnout</string>
     <string name="str_return">Vrátit</string>
     <string name="rate_and_return">Ohodnotit a vrátit</string>
     <string name="spinner_title">Lokalita</string>
     <string name="choose_locality">Místo vracení</string>
     <string name="rate_book">Ohodnoťte knihu</string>
     <string name="rate_words_book">Slovní hodnocení knihy</string>
+    <string name="reservation_exist">Kniha je rezervovaná</string>
+    <string name="reservation_exist_info">Tuto knihu mají rezervovanou jiní uživatelé, opravdu si jí chcete vypůjčit?</string>
+    <string name="yes">Ano</string>
+    <string name="no">Ne</string>
+    <string name="downloading">Stahování ...</string>
+    <string name="downloaded">Soubor uložen do složky</string>
+    <string name="filter">Vyfiltrovat</string>
+    <string name="jazyk_cz">CZ</string>
+    <string name="jazyken">EN</string>
+    <string name="type_book">Papír</string>
+    <string name="type_ebook">E-Book</string>
+    <string name="type_audio">Audio</string>
+    <string name="jazyk">Jazyk: </string>
+    <string name="typ">Typ: </string>
+    <string name="filter_title">Filtr</string>
+    <string name="all">Vše</string>
+    <string name="share">Sdílet</string>
+    <string name="shareTitle">Super kniha</string>
+    <string name="shareVia">Sdílet pomocí</string>
 
 
 </resources>

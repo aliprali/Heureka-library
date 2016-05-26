@@ -7,11 +7,13 @@ import com.google.gson.annotations.SerializedName;
  */
 public class BookHolders {
 
-   public String user_name;
+    String user_name;
     String type;
     String date;
     @SerializedName("return")
     String returnB;
+    String rate;
+    String textRate;
 
     public String getBorrowDate(){
         return date;
@@ -27,5 +29,17 @@ public class BookHolders {
 
     public String getType(){
         return type;
+    }
+
+    public String getRate(){
+        return rate;
+    }
+
+    public String getTextRate() {
+        return textRate;
+    }
+
+    public void setTextRate(String textRate) {
+        this.textRate = textRate;
     }
 }

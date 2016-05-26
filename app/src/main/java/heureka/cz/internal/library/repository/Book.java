@@ -5,6 +5,7 @@ import android.os.Parcelable;
 
 import com.activeandroid.annotation.Column;
 import com.activeandroid.annotation.Table;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -14,35 +15,30 @@ import java.util.List;
  * Created by tomas on 6.4.16.
  */
 
-@Table(name = "book")
-public class Book extends ParcelableModel implements Parcelable {
+public class Book implements Parcelable {
 
-    @Column(name = "book_id")
     private Integer bookId;
 
-    @Column(name = "name")
     private String name;
 
-    @Column(name = "detail_link")
     private String detailLink;
 
-    @Column(name = "lang")
     private String lang;
 
-    @Column(name = "form")
     private String form;
 
-    @Column(name = "total")
+    private String mime;
+
     private Integer total;
 
-    @Column(name = "tags")
-    private String dbTags;
+    @SerializedName(value="tags")
+    private List<Tag> tags = new LinkedList<>();
 
-    private List<String> tags = new LinkedList<>();
-
+    @SerializedName(value="holders")
     private ArrayList<Holder> holders = new ArrayList<>();
 
-    private ArrayList<BookAvailable> available= new ArrayList<>();
+    @SerializedName(value="available")
+    private ArrayList<BookAvailable> available = new ArrayList<>();
 
     public Integer getBookId() {
         return bookId;
@@ -84,6 +80,14 @@ public class Book extends ParcelableModel implements Parcelable {
         this.form = form;
     }
 
+    public String getMime() {
+        return mime;
+    }
+
+    public void setMime(String mime) {
+        this.mime = mime;
+    }
+
     public Integer getTotal() {
         return total;
     }
@@ -92,11 +96,11 @@ public class Book extends ParcelableModel implements Parcelable {
         this.total = total;
     }
 
-    public List<String> getTags() {
+    public List<Tag> getTags() {
         return tags;
     }
 
-    public void setTags(List<String> tags) {
+    public void setTags(List<Tag> tags) {
         this.tags = tags;
     }
 
@@ -116,14 +120,6 @@ public class Book extends ParcelableModel implements Parcelable {
         this.available = available;
     }
 
-    public String getDbTags() {
-        return dbTags;
-    }
-
-    public void setDbTags(String dbTags) {
-        this.dbTags = dbTags;
-    }
-
     @Override
     public int describeContents() {
         return 0;
@@ -136,9 +132,9 @@ public class Book extends ParcelableModel implements Parcelable {
         dest.writeString(this.detailLink);
         dest.writeString(this.lang);
         dest.writeString(this.form);
-        dest.writeString(this.dbTags);
+        dest.writeString(this.mime);
         dest.writeValue(this.total);
-        dest.writeStringList(this.tags);
+        dest.writeTypedList(this.tags);
         dest.writeTypedList(holders);
         dest.writeList(this.available);
     }
@@ -152,9 +148,9 @@ public class Book extends ParcelableModel implements Parcelable {
         this.detailLink = in.readString();
         this.lang = in.readString();
         this.form = in.readString();
-        this.dbTags = in.readString();
+        this.mime = in.readString();
         this.total = (Integer) in.readValue(Integer.class.getClassLoader());
-        this.tags = in.createStringArrayList();
+        this.tags = in.createTypedArrayList(Tag.CREATOR);
         this.holders = in.createTypedArrayList(Holder.CREATOR);
         this.available = new ArrayList<BookAvailable>();
         in.readList(this.available, BookAvailable.class.getClassLoader());
@@ -171,4 +167,20 @@ public class Book extends ParcelableModel implements Parcelable {
             return new Book[size];
         }
     };
+
+    @Override
+    public String toString() {
+        return "Book{" +
+                "bookId=" + bookId +
+                ", name='" + name + '\'' +
+                ", detailLink='" + detailLink + '\'' +
+                ", lang='" + lang + '\'' +
+                ", form='" + form + '\'' +
+                ", mime=" + mime + '\'' +
+                ", total=" + total +
+                ", tags=" + tags +
+                ", holders=" + holders +
+                ", available=" + available +
+                '}';
+    }
 }

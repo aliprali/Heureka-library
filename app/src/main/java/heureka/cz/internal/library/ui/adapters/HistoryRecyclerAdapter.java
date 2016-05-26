@@ -5,20 +5,16 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
-import com.activeandroid.query.Select;
 
 import java.util.ArrayList;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 import heureka.cz.internal.library.R;
 import heureka.cz.internal.library.helpers.CollectionUtils;
-import heureka.cz.internal.library.repository.Book;
 import heureka.cz.internal.library.repository.BookHolders;
 
 /**
@@ -56,8 +52,36 @@ public class HistoryRecyclerAdapter extends RecyclerView.Adapter<HistoryRecycler
     public void onBindViewHolder(ViewHolder holder, int position) {
         final BookHolders bookHolder = holders.get(position);
         holder.name.setText(bookHolder.getName());
-        holder.dateBorrow.setText(bookHolder.getBorrowDate());
-        holder.dateReturn.setText(bookHolder.getReturnDate());
+        holder.date.setText(bookHolder.getBorrowDate());
+        String star =bookHolder.getRate();
+
+        if (star == null) {
+            holder.rate.setImageResource(R.drawable.nulahv);
+            return;
+        }
+
+        switch (star) {
+            case "0":
+                holder.rate.setImageResource(R.drawable.nulahv);
+                break;
+            case "1":
+                holder.rate.setImageResource(R.drawable.jednahv);
+                break;
+            case "2":
+                holder.rate.setImageResource(R.drawable.dvehv);
+                break;
+            case "3":
+                holder.rate.setImageResource(R.drawable.trihv);
+                break;
+            case "4":
+                holder.rate.setImageResource(R.drawable.ctyrihv);
+                break;
+            case "5":
+                holder.rate.setImageResource(R.drawable.pethv);
+                break;
+            default:
+                holder.rate.setImageResource(R.drawable.nulahv);
+        }
 
     }
 
@@ -75,11 +99,11 @@ public class HistoryRecyclerAdapter extends RecyclerView.Adapter<HistoryRecycler
         @Bind(R.id.historyUser)
         public TextView name;
 
-        @Bind(R.id.dateBorrow)
-        public TextView dateBorrow;
+        @Bind(R.id.historyDate)
+        public TextView date;
 
-        @Bind(R.id.dateReturn)
-        public TextView dateReturn;
+        @Bind(R.id.historyRateStar)
+        public ImageButton rate;
 
 
 

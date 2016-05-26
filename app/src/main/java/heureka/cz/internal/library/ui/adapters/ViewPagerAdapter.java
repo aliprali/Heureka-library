@@ -9,6 +9,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 
+import heureka.cz.internal.library.repository.Book;
 import heureka.cz.internal.library.ui.fragments.BookDetailFragment;
 import heureka.cz.internal.library.ui.fragments.BookHistoryFragment;
 
@@ -17,9 +18,9 @@ public class ViewPagerAdapter extends FragmentPagerAdapter {
     final int PAGE_COUNT = 2;
 
     BookDetailFragment detailKnihy;
+
     // Tab Titles
     private String tabtitles[] = new String[] { "Detail knihy", "Historie knihy" };
-    Context context;
 
     public ViewPagerAdapter(FragmentManager fm) {
         super(fm);
@@ -36,11 +37,8 @@ public class ViewPagerAdapter extends FragmentPagerAdapter {
 
 
             case 0:
-                System.out.println("CASE0");
                 detailKnihy = new BookDetailFragment();
                 return detailKnihy;
-
-
             case 1:
                 System.out.println("CASE1");
                 Bundle bundle = new Bundle();
@@ -55,5 +53,9 @@ public class ViewPagerAdapter extends FragmentPagerAdapter {
     @Override
     public CharSequence getPageTitle(int position) {
         return tabtitles[position];
+    }
+
+    public Book getBook() {
+        return detailKnihy.getBook();
     }
 }

@@ -36,7 +36,7 @@ public class AvailableRecyclerAdapter extends RecyclerView.Adapter<AvailableRecy
         final BookAvailable available = bookAvailable.get(position);
 
         holder.place.setText(available.getPlace());
-        holder.quantity.setText("" + available.getQuantity());
+        holder.quantity.setText("" + available.getAvailable());
     }
 
     @Override

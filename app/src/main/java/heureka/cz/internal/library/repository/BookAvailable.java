@@ -9,7 +9,7 @@ import android.os.Parcelable;
 public class BookAvailable implements Parcelable {
 
     private String place;
-    private Integer quantity;
+    private Integer available;
 
     public String getPlace() {
         return place;
@@ -19,12 +19,12 @@ public class BookAvailable implements Parcelable {
         this.place = place;
     }
 
-    public Integer getQuantity() {
-        return quantity;
+    public Integer getAvailable() {
+        return available;
     }
 
-    public void setQuantity(Integer quantity) {
-        this.quantity = quantity;
+    public void setAvailable(Integer quantity) {
+        this.available = quantity;
     }
 
     @Override
@@ -35,7 +35,7 @@ public class BookAvailable implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(this.place);
-        dest.writeValue(this.quantity);
+        dest.writeValue(this.available);
     }
 
     public BookAvailable() {
@@ -43,7 +43,7 @@ public class BookAvailable implements Parcelable {
 
     protected BookAvailable(Parcel in) {
         this.place = in.readString();
-        this.quantity = (Integer) in.readValue(Integer.class.getClassLoader());
+        this.available = (Integer) in.readValue(Integer.class.getClassLoader());
     }
 
     public static final Parcelable.Creator<BookAvailable> CREATOR = new Parcelable.Creator<BookAvailable>() {

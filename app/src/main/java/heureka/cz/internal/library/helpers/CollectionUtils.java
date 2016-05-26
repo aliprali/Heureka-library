@@ -1,7 +1,5 @@
 package heureka.cz.internal.library.helpers;
 
-import android.util.Log;
-
 import java.util.List;
 
 /**
@@ -9,23 +7,23 @@ import java.util.List;
  */
 public class CollectionUtils {
 
-    public String implode(String separator, String... data) {
+    public String implode(String separator, Object... data) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < data.length - 1; i++) {
             //data.length - 1 => to not add separator at the end
-            if (!data[i].matches(" *")) {//empty string are ""; " "; "  "; and so on
+            if (!data[i].toString().matches(" *")) {//empty string are ""; " "; "  "; and so on
                 sb.append(data[i]);
                 sb.append(separator);
             }
         }
-        sb.append(data[data.length - 1].trim());
+        sb.append(data[data.length - 1].toString().trim());
         return sb.toString();
     }
 
-    public String implode(String separator, List<String> list) {
+    public String implode(String separator, List<Object> list) {
         StringBuilder sb = new StringBuilder();
-        for (String item : list) {
-            if (!item.matches(" *")) {//empty string are ""; " "; "  "; and so on
+        for (Object item : list) {
+            if (!item.toString().matches(" *")) {//empty string are ""; " "; "  "; and so on
                 sb.append(item);
                 sb.append(separator);
             }

@@ -18,10 +18,11 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 import heureka.cz.internal.library.R;
 import heureka.cz.internal.library.helpers.CollectionUtils;
+import heureka.cz.internal.library.helpers.RetrofitBuilder;
 import heureka.cz.internal.library.repository.Book;
+import heureka.cz.internal.library.repository.Settings;
 import heureka.cz.internal.library.rest.ApiDescription;
 import heureka.cz.internal.library.ui.adapters.BookRecyclerAdapter;
-import retrofit2.Retrofit;
 
 /**
  * Created by tomas on 28.4.16.
@@ -35,10 +36,13 @@ public abstract class AbstractBookFragment extends Fragment {
     RecyclerView recyclerView;
 
     @Inject
-    Retrofit retrofit;
+    RetrofitBuilder retrofitBuilder;
 
     @Inject
     CollectionUtils collectionUtils;
+
+    @Inject
+    Settings settings;
 
     protected BookRecyclerAdapter adapter;
     protected ApiDescription apiDescription;
@@ -58,6 +62,7 @@ public abstract class AbstractBookFragment extends Fragment {
     @Override
     public void onViewCreated(final View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        System.out.println("ONVIEWCREATED ABSTR");
 
         if(getActivity() instanceof TitleSetter) {
             ((TitleSetter)getActivity()).setTitle(getTitle());
@@ -73,24 +78,26 @@ public abstract class AbstractBookFragment extends Fragment {
         }
     }
 
+    public void callSuper(final View view, Bundle savedInstanceState){
+        super.onViewCreated(view, savedInstanceState);
+    }
+
     protected abstract void callApi();
 
     protected abstract int getTitle();
-
-
 
     protected boolean isMyBook() {
         return false;
     }
 
-    private void initAdapter(ArrayList<Book> books) {
+    void initAdapter(ArrayList<Book> books) {
         Log.d(TAG, "set adapter");
 
         if(getActivity() == null) {
             return;
         }
 
-        adapter = new BookRecyclerAdapter(books, collectionUtils);
+        adapter = new BookRecyclerAdapter(books, collectionUtils, settings);
         recyclerView.setAdapter(adapter);
 
         adapter.setListener(new BookRecyclerAdapter.OnTaskItemClickListener() {
@@ -103,11 +110,6 @@ public abstract class AbstractBookFragment extends Fragment {
 
                     ((BookDetailOpener)getActivity()).bookDetail(adapter.getBooks().get(taskPosition), isMyBook());
                 }
-
-//                if(getActivity() instanceof BookReturnOpener) {
-//                    Log.d(TAG, "return");
-//                    ((BookReturnOpener)getActivity()).bookReturn(adapter.getBooks().get(taskPosition));
-//                }
           }
 
             @Override
@@ -115,18 +117,6 @@ public abstract class AbstractBookFragment extends Fragment {
                 Log.d(TAG, "on long click");
             }
 
-            @Override
-            public boolean onBackupClick(int taskPosition) {
-                Log.d(TAG, "backup click");
-                try {
-                    adapter.getBooks().get(taskPosition).setDbTags(collectionUtils.implode(",", adapter.getBooks().get(taskPosition).getTags()));
-                    adapter.getBooks().get(taskPosition).save();
-                    return true;
-                } catch (Exception e) {
-                    Log.w(TAG, e);
-                    return false;
-                }
-            }
         });
     }
 

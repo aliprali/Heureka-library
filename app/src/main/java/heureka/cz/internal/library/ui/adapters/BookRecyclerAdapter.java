@@ -5,21 +5,21 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.activeandroid.query.Select;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 import heureka.cz.internal.library.R;
 import heureka.cz.internal.library.helpers.CollectionUtils;
+import heureka.cz.internal.library.helpers.Config;
 import heureka.cz.internal.library.repository.Book;
+import heureka.cz.internal.library.repository.Settings;
 
 /**
  * Created by tomas on 6.4.16.
@@ -28,13 +28,14 @@ public class BookRecyclerAdapter extends RecyclerView.Adapter<BookRecyclerAdapte
 
     private ArrayList<Book> books;
     private OnTaskItemClickListener listener;
-
+    private Settings settings;
 
     private CollectionUtils collectionUtils;
 
-    public BookRecyclerAdapter(@NonNull ArrayList<Book> books, CollectionUtils collectionUtils) {
+    public BookRecyclerAdapter(@NonNull ArrayList<Book> books, CollectionUtils collectionUtils, Settings settings) {
         this.books = books;
         this.collectionUtils = collectionUtils;
+        this.settings = settings;
     }
 
     public void setData(@NonNull ArrayList<Book> books) {
@@ -61,13 +62,17 @@ public class BookRecyclerAdapter extends RecyclerView.Adapter<BookRecyclerAdapte
         holder.name.setText(book.getName());
         holder.lang.setText(book.getLang());
         holder.form.setText(book.getForm());
-        holder.tags.setText(book.getTags().size() > 0 ? collectionUtils.implode(",", book.getTags()) : book.getDbTags());
+        holder.tags.setText(book.getTags().size() > 0 ? collectionUtils.implode(",", book.getTags()) : "");
 
-        Book saveBook = new Select().from(Book.class).where("book_id = ?", book.getBookId()).executeSingle();
-        holder.doBackup.setEnabled(saveBook == null);
-        if(saveBook != null) {
-            holder.doBackup.setImageResource(R.drawable.ic_backup_blue_grey);
+        if(settings.get() == null) {
+            return;
         }
+
+        Picasso.with(holder.image.getContext())
+                .load(settings.get().getApiAddress() + Config.URL_APIS_IMG.replaceAll("#id", ""+book.getBookId()))
+                .placeholder(R.drawable.ic_book)
+                .error(R.mipmap.ic_launcher)
+                .into(holder.image);
     }
 
     public ArrayList<Book> getBooks() {
@@ -80,6 +85,9 @@ public class BookRecyclerAdapter extends RecyclerView.Adapter<BookRecyclerAdapte
     }
 
     class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
+
+        @Bind(R.id.image)
+        public ImageView image;
 
         @Bind(R.id.name)
         public TextView name;
@@ -95,16 +103,6 @@ public class BookRecyclerAdapter extends RecyclerView.Adapter<BookRecyclerAdapte
 
         @Bind(R.id.detail_clickable)
         public LinearLayout detailClicable;
-
-        @Bind(R.id.backup_book)
-        public ImageView doBackup;
-
-        @OnClick(R.id.backup_book)
-        public void doBackup() {
-            if(listener.onBackupClick(getAdapterPosition())) {
-                doBackup.setImageResource(R.drawable.ic_backup_blue_grey);
-            }
-        }
 
         public ViewHolder(View itemView) {
             super(itemView);
@@ -131,7 +129,6 @@ public class BookRecyclerAdapter extends RecyclerView.Adapter<BookRecyclerAdapte
     }
 
     public interface OnTaskItemClickListener {
-        boolean onBackupClick(int taskPosition);
         void onItemClick(int taskPosition);
         void onItemLongClick(int taskPosition);
     }
